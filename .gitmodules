@@ -4,3 +4,6 @@
 [submodule "smol"]
 	path = smol
 	url = https://github.com/PoroCYon/smol.git
+[submodule "oneKpaq"]
+	path = oneKpaq
+	url = git@github.com:PoroCYon/oneKpaq.git

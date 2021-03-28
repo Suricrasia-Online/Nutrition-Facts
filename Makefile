@@ -48,7 +48,7 @@ CFLAGS += `pkg-config --cflags gtk+-3.0 librsvg-2.0`
 
 LDFLAGS = -lc -lGL -lglib-2.0 -lgobject-2.0 -lgtk-3 -lgdk-3 -lcairo -lrsvg-2
 
-.PHONY: clean check_size noelfver
+.PHONY: clean check_size
 
 all : $(PROJNAME) check_size
 
@@ -56,11 +56,8 @@ $(PROJNAME).zip : $(PROJNAME) $(PROJNAME)_unpacked README.txt screenshot.jpg
 	-rm $@
 	zip $@ $^
 
-packer : vondehi/vondehi.asm 
-	cd vondehi; nasm -fbin -o vondehi -DWANT_ARGV -DNO_CHEATING vondehi.asm
-
-noelfver : noelfver/noelfver.c
-	make -C noelfver/
+oneKpaq/onekpaq :
+	make -C oneKpaq/
 
 shader.h : shader.frag Makefile
 	mono ./shader_minifier.exe --no-renaming-list main,ss,cn shader.frag -o shader.h
@@ -82,12 +79,8 @@ $(PROJNAME)_unpacked : $(PROJNAME).c shader.h Makefile
 $(PROJNAME) : $(PROJNAME).elf.smol.packed
 	mv $< $@
 
-%.xz : % Makefile
-	-rm $@
-	./nicer.py $< -o $@
-
-%.packed : %.xz packer Makefile
-	cat ./vondehi/vondehi $< > $@
+%.packed : % oneKpaq/onekpaq Makefile
+	cd oneKpaq; ./onekpaq.py 3 3 ../$< ../$@; cd ..
 	chmod +x $@
 
 clean :
