@@ -35,7 +35,7 @@ float cn(vec2 p) {
   return ss(max(p,0.)) + min(0.,max(p.x,p.y));
 }
 
-//welcome to the 4 dimensional cn function how may I take your order?
+//welcome to the 4 dimensional corner function how may I take your order?
 float cn(vec4 p) {
     return length(max(p,0.))+min(0.,max(max(p.x,p.y),max(p.z,p.w)));
 }
@@ -60,12 +60,18 @@ float cantab(vec3 p){
     indent=smin(min(bridge,connector),indent,1.3);
     return-smin(-indent,-tab,.5);
 }
-#define CANSCALE 80.;
+
+float stex(vec3 p) {
+	return sin(dot(sin(p*32.),vec3(2,9,1)))*cos(dot(cos(p*43.),vec3(6,1,5)))
+		+sin(dot(sin(p*52.),vec3(2,3,9)))*cos(dot(cos(p*73.),vec3(9,1,2)));
+}
 
 vec3 gcancoords;
 float thecan(vec3 p){
     gcancoords = p;
-    p*=CANSCALE;
+    p.z += stex(p*vec3(7,.2,.1))*.0001*smoothstep(.78,.8,p.z);
+    p*=80.;
+    
     float outer1=cylinder(p,vec2(24.345,58.925))-2.;
     float outer2=cylinder(p-vec3(0,0,3.105),vec2(23.2,64.83))-2.;
     float rim=cylinder(p-vec3(0,0,69.63),vec2(23.88,-.75))-2.;
@@ -74,28 +80,25 @@ float thecan(vec3 p){
     float knob=cylinder(p-vec3(0,0,67.23),vec2(1.65,.55))-.25;
     vec3 p2=vec3(sqrt(p.r*p.r+4.),p.gb);
     float bumps=length(p2-vec3(4.,10.,66.13))-1.1;
-    float hole=-smin(-length(p.rg-vec2(0,-9))+8.,-length(p.rg-vec2(0,-15))+11.5,3.);
+    float hole=cn(vec2(-smin(-length(p.rg-vec2(0,-9))+8.,-length(p.rg-vec2(0,-15))+11.5,3.),-p.z));
     p2.g+=20.5;
     p2.gr=kink(p2.gr,vec2(10,0),.1);
     float ridge=length(vec2(p.b-66.73,linedist(p2.rg,vec2(2,-2),vec2(12,14))))-.5;
     float fuckery=ss(p-vec3(5,-6.5,66.73))-2.;
     float inside=cylinder(p-vec3(0,0,14.63),vec2(20.56,52.));
-    float tab=10000.;
-    if(p.b>60.)tab=cantab(erot(p,vec3(0,0,1),.2)-vec3(0.,5.5,68.13));
-    p-=vec3(5,-4.,66.23);
-    p=erot(p,normalize(vec3(1.5,-.5,.4)),-1.);
-    p+=vec3(5.,-4.5,66.73);
-    float hole2=-smin(-length(p.rg-vec2(0,-9))+8.,-length(p.rg-vec2(0,-15))+11.5,3.);
-    float lip=cn(vec2(abs(p.b-66.73),hole2))-.2;
+    // float tab=10000.;
+    // p-=vec3(5,-4.,66.23);
+    // p=erot(p,normalize(vec3(1.5,-.5,.4)),-1.);
+    // p+=vec3(5.,-4.5,66.73);
     float main=chamfer(vec2(outer1,outer2),.4,1.4,.9);
     main=smin(-smin(-min(main,rim),subinner,1.),addinner,2.);
     main=-smin(hole,-smin(min(main,knob),bumps,1.2),.5);
     main=-smin(-smin(main,ridge,1.),fuckery,3.);
     main=max(main,-inside);
-    main=min(tab,smin(main,lip,2.));
-    return main/CANSCALE;
+    
+    if(p.b>60.)main=min(main,cantab(erot(gcancoords*80.,vec3(0,0,1),.2)-vec3(0.,5.5,68.13)));
+    return main/80.;
 }
-
 
 float gated_sphere(vec3 p, float scale, bool gate) {
     if (!gate) {
@@ -149,13 +152,9 @@ float fractal(vec2 p, float k) {
 
 float splat;
 float scene(vec3 p) {
-    vec3 myp = p;
-    
-    myp -= vec3(-0.2,-1.5-.4,-1.4+.15);
-    myp = erot(myp, vec3(0,1,0), -.1-.15);//todo; roll into one
-    myp = erot(myp, vec3(1,0,0), .7+.25);
-    myp = erot(myp, vec3(0,0,1), 1.7);
-    float can = thecan(myp);
+    float can = 10000.;
+    if (p.y < 0.) can = thecan(erot(p-vec3(-0.2,-1.90,-1.25), vec3(0.49, 0.34, 0.8), 1.79));
+
     p.x += cos(p.z*4.)/25.*cos(p.y*5.);
     //p.y += 1.;
     float fr1 = fractal(p.yz, 1.8);
@@ -163,7 +162,7 @@ float scene(vec3 p) {
     float fr2 = fractal(p2.yz, 2.4);
     //this is like, a 4 dimensional.. intersection(?) of two versions of a KIFS fractal
     splat = cn(vec4(fr1-.035, fr2-.035, abs(p.x), p2.x)/sqrt(2.))-.015+ cos(fr1*100.)*.001+ cos(fr2*200.)*.001;
-    splat = bubbleify(p, splat);
+    if (splat < 0.) splat = bubbleify(p, splat);
     //return can;
     //return splat;
     return min(splat, can);
@@ -180,7 +179,7 @@ vec3 pixel_color( vec2 uv, float hs )
     vec3 init = vec3(-4,-.6,-.6);
     
     float zrot = 4.;
-    float yrot = .0;//;
+    // float yrot = .0;
     cam = erot(cam, vec3(1,0,0), -.6);
     //cam = erot(cam, vec3(0,1,0), yrot);
     //init = erot(init, vec3(0,1,0), yrot);
@@ -196,7 +195,7 @@ vec3 pixel_color( vec2 uv, float hs )
     bool label = false;
     vec3 cancoords;
     vec3 n;
-    for (int i = 0; i < 150; i++) {
+    for (int i = 0; i < 200; i++) {
         float dist = scene(p);
         if (recalcK) { k = dist < 0. ? -1. : 1.; recalcK = false; }
         p += cam*dist*k*1.1;
@@ -215,9 +214,6 @@ vec3 pixel_color( vec2 uv, float hs )
                 if (!iscola) {
                     if (abs(cancoords.z) < .72 && length(cancoords.xy) > .31) {
                         label = true;
-                    } else {
-                        vec3 rnd = normalize(tan(vec3(hash(hs, 2.4),hash(hs, 7.2),hash(hs, 6.3))));
-                        cam += rnd*fres*.3*(sin(p.z*500.+p.y*200.)*.3+1.)*(sin(p.z*500.-p.y*200.)*.4+1.);
                     }
                 }
                 cam = normalize(cam);
@@ -233,13 +229,14 @@ vec3 pixel_color( vec2 uv, float hs )
         if (distance(p, init) > 10.) { escape=true; break; }
     }
     
-    float fact = length(sin(cam*4.)*.5+.5);
-    vec3 environ = vec3(smoothstep(1.,2.5,fact)+smoothstep(1.45,1.6,fact)*5.) + fact/8.;
+    
+    float fact = length(sin(cam*3.9)*.5+.5);
+    vec3 environ = vec3(smoothstep(1.,2.5,fact)+smoothstep(1.45,1.6,fact)*8.) + fact/8.;
     //environ = 1.;
     //environ += cola*1000.;
-    environ *= mix(vec3(1), vec3(1.,.5,.4), smoothstep(0.,1.,cola*1.2+.2));
+    environ *= mix(vec3(1), vec3(1.3,0.6,0.5), smoothstep(0.,.5,cola+.1));
     vec3 col = (bounce&&escape) ? environ : vec3(0.0);
-    col += cola*vec3(1.,.5,.4)*1.2;
+    col += cola*vec3(1.3,0.6,0.5);
     if (label) {
         //diffuse material takes too long to converge, so it's time 2 cheat :3
         vec2 texcoords = vec2(atan(cancoords.y,cancoords.x)/3.1415-.15, cancoords.z*.7+.5);
@@ -264,5 +261,5 @@ void main() {
 
 	fragCol/=fragCol.w;
 	fragCol *= 1.0 - dot(uv,uv)*0.5; //vingetting lol
-	fragCol = smoothstep(0.05,1.1,sqrt(fragCol));; //colour grading
+	fragCol = smoothstep(0.05,1.1,sqrt(fragCol)); //colour grading
 }

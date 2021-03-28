@@ -29,7 +29,7 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 #define CHAR_BUFF_SIZE 256
 
 #define DEBUG_FRAG
-// #define DEBUG_VERT
+#define DEBUG_VERT
 #define DEBUG_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
@@ -116,6 +116,9 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 	if (!flipped) { gtk_gl_area_queue_render(glarea); flipped = true; return TRUE; }
 	compile_shader();
 
+#ifdef TIME_RENDER
+	gtimer = g_timer_new();
+#endif
 	rendered = true;
 	// glVertexAttrib1f(0, 0);
 
@@ -135,9 +138,6 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
 __attribute__((__externally_visible__, __section__(".text.startup._start"), __noreturn__))
 void _start() {
 	asm volatile("push %rax\n");
-#ifdef TIME_RENDER
-	gtimer = g_timer_new();
-#endif
 
 	typedef void (*voidWithOneParam)(int*);
 #pragma GCC diagnostic push
