@@ -28,13 +28,14 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 #define LABEL_HEIGHT 1000
 #define CHAR_BUFF_SIZE 256
 
-#define DEBUG_FRAG
+// #define DEBUG_FRAG
 // #define DEBUG_VERT
 #define CHAR_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
 #define EXIT_USING_ESC_KEY
 
+bool windowed = false;
 bool rendered = false;
 bool flipped = false;
 
@@ -115,7 +116,7 @@ static gboolean
 on_render (GtkGLArea *glarea, GdkGLContext *context)
 {
 	(void)context;
-	if (rendered || !(gdk_window_get_state(window) & GDK_WINDOW_STATE_FULLSCREEN)) return TRUE;
+	if (rendered || (!windowed && !(gdk_window_get_state(window) & GDK_WINDOW_STATE_FULLSCREEN))) return TRUE;
 	if (!flipped) { gtk_gl_area_queue_render(glarea); flipped = true; return TRUE; }
 	compile_shader();
 
@@ -164,7 +165,17 @@ void _start() {
 
 	gtk_widget_show_all (win);
 
-	gtk_window_fullscreen((GtkWindow*)win);
+	windowed = getenv("WINDOWED");
+
+	GdkGeometry hints;
+	hints.base_height = CANVAS_HEIGHT;
+	hints.min_height = CANVAS_HEIGHT;
+	hints.max_height = CANVAS_HEIGHT;
+	hints.base_width = CANVAS_WIDTH;
+	hints.min_width = CANVAS_WIDTH;
+	hints.max_width = CANVAS_WIDTH;
+	gtk_window_set_geometry_hints ((GtkWindow*)win, NULL, &hints, GDK_HINT_MIN_SIZE | GDK_HINT_BASE_SIZE | GDK_HINT_MAX_SIZE);
+	if (!windowed) gtk_window_fullscreen((GtkWindow*)win);
 	window = gtk_widget_get_window(win);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
