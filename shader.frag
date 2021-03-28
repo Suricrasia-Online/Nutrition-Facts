@@ -62,8 +62,7 @@ float cantab(vec3 p){
 }
 
 float stex(vec3 p) {
-	return sin(dot(sin(p*32.),vec3(2,9,1)))*cos(dot(cos(p*43.),vec3(6,1,5)))
-		+sin(dot(sin(p*52.),vec3(2,3,9)))*cos(dot(cos(p*73.),vec3(9,1,2)));
+	return sin(dot(sin(p*32.),vec3(2,9,1)))*cos(dot(cos(p*43.),vec3(6,1,5)))+sin(dot(sin(p*52.),vec3(2,3,9)))*cos(dot(cos(p*73.),vec3(9,1,2)));
 }
 
 vec3 gcancoords;
@@ -129,7 +128,8 @@ float bubbleify(vec3 p, float sdf) {
 
         //ripe for minify
         vec3 id = round(p/scale)*scale;
-        bool gated = hash(id.x, hash(id.y, id.z)) > .65;
+        //not using hash here bc it's too different on other platforms
+        bool gated = stex(id) > .65;
         float holes = gated_sphere(p-id, scale, gated);
         bubbles = min(bubbles, holes);
         
