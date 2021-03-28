@@ -61,8 +61,9 @@ noelfver : noelfver/noelfver.c
 	make -C noelfver/
 
 shader.h : shader.frag Makefile
-	mono ./shader_minifier.exe --no-renaming-list ss,main shader.frag -o shader.h
-# 	sed -i 's/shader_frag =/shader_frag = "\\n"/' shader.h
+	mono ./shader_minifier.exe --no-renaming-list main,ss,cn shader.frag -o shader.h
+	sed -i 's/\x0D$$//' shader.h
+	sed -i 's/"$$/\\n"/' shader.h
 
 $(PROJNAME).o : $(PROJNAME).c shader.h Makefile
 	gcc -c -o $@ $< $(CFLAGS)

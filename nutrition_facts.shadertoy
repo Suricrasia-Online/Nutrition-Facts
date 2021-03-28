@@ -189,8 +189,8 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     float zrot = 4.;
     float yrot = .0;//;
     cam = erot(cam, vec3(1,0,0), -.6);
-    cam = erot(cam, vec3(0,1,0), yrot);
-    init = erot(init, vec3(0,1,0), yrot);
+    //cam = erot(cam, vec3(0,1,0), yrot);
+    //init = erot(init, vec3(0,1,0), yrot);
     cam = erot(cam, vec3(0,0,1), zrot);
     init = erot(init, vec3(0,0,1), zrot);
     
@@ -246,15 +246,15 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     vec3 environ = vec3(smoothstep(1.,2.5,fact)+smoothstep(1.45,1.6,fact)*5.) + fact/8.;
     //environ = 1.;
     //environ += cola*1000.;
-    environ *= mix(vec3(1), vec3(1.,.6,.5), smoothstep(0.,1.,cola+.3));
+    environ *= mix(vec3(1), vec3(1.,.5,.4), smoothstep(0.,1.,cola*1.2+.2));
     vec3 col = (bounce&&escape) ? environ : vec3(0.0);
-    col += cola*vec3(1.,.6,.5)*1.2;
+    col += cola*vec3(1.,.5,.4)*1.2;
     if (label) {
         //diffuse material takes too long to converge, so it's time 2 cheat :3
         vec2 texcoords = vec2(atan(cancoords.x,cancoords.y)/3.1415, cancoords.z*.74+.5);
         vec3 tone = .75*pow(texture(iChannel1, texcoords).xyz,vec3(2.))+.1;
         float diff = length(sin(n*3.)*.5+.5)/sqrt(3.);
-        col += vec3(diff*tone)*(hs*.5+.9);
+        col = smoothstep(.1,.4,col) + vec3(diff*tone)*(hs*.5+.9);
     }
     //fragColor *= 0.8;
     fragColor += vec4(col, 1);

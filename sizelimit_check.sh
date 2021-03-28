@@ -8,5 +8,5 @@ function check_size() {
 	fi
 }
 
-wc -c enamel_pin
-check_size "enamel_pin"
+wc -c nutrition_facts
+check_size "nutrition_facts"
