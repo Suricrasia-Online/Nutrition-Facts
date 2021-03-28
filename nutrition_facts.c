@@ -28,8 +28,8 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 #define LABEL_HEIGHT 1000
 #define CHAR_BUFF_SIZE 256
 
-// #define DEBUG_FRAG
-// #define DEBUG_VERT
+#define DEBUG_FRAG
+#define DEBUG_VERT
 #define CHAR_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
@@ -101,7 +101,7 @@ static inline void compile_shader()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	char* canColor = getenv("CAN_COLOR");
-	if (canColor == NULL) canColor = "e82828";
+	if (canColor == NULL) canColor = "df2424";
 	memcpy(label_svg+128, canColor, 6);
   cairo_surface_t* cairoSurf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, LABEL_WIDTH, LABEL_HEIGHT);
   cairo_t* cairoCtx = cairo_create(cairoSurf);
