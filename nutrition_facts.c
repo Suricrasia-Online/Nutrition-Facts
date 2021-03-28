@@ -12,6 +12,10 @@
 #include <GL/glx.h>
 #include <GL/glu.h>
 #include <GL/glext.h>
+#include <cairo/cairo.h>
+
+#include <librsvg/rsvg.h>
+#include "label.h"
 
 #include "sys.h"
 
@@ -20,9 +24,12 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 
 #define CANVAS_WIDTH 1920
 #define CANVAS_HEIGHT 1080
+#define LABEL_WIDTH 1300
+#define LABEL_HEIGHT 1000
+#define CHAR_BUFF_SIZE 256
 
 #define DEBUG_FRAG
-#define DEBUG_VERT
+// #define DEBUG_VERT
 #define DEBUG_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
@@ -85,6 +92,20 @@ static inline void compile_shader()
 	GLuint vao;
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
+
+	GLuint renderedTex;
+	glGenTextures(1, &renderedTex);
+	glBindTexture(GL_TEXTURE_2D, renderedTex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  cairo_surface_t* cairoSurf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, LABEL_WIDTH, LABEL_HEIGHT);
+  cairo_t* cairoCtx = cairo_create(cairoSurf);
+	RsvgHandle *handle = rsvg_handle_new_from_data(label_svg, label_svg_len, NULL);
+	rsvg_handle_render_cairo(handle, cairoCtx);
+	unsigned char* rendered_data = cairo_image_surface_get_data(cairoSurf);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, LABEL_WIDTH, LABEL_HEIGHT, 0, GL_BGRA, GL_UNSIGNED_BYTE, rendered_data);
 }
 
 static gboolean

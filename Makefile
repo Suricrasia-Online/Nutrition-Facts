@@ -42,9 +42,9 @@ CFLAGS += -Wextra
 CFLAGS += -no-pie
 
 CFLAGS += -nostartfiles -nodefaultlibs
-CFLAGS += `pkg-config --cflags gtk+-3.0`
+CFLAGS += `pkg-config --cflags gtk+-3.0 librsvg-2.0`
 
-LDFLAGS = -lc -lGL -lglib-2.0 -lgobject-2.0 -lgtk-3 -lgdk-3
+LDFLAGS = -lc -lGL -lglib-2.0 -lgobject-2.0 -lgtk-3 -lgdk-3 -lcairo -lrsvg-2
 
 .PHONY: clean check_size noelfver
 
@@ -62,10 +62,13 @@ noelfver : noelfver/noelfver.c
 
 shader.h : shader.frag Makefile
 	mono ./shader_minifier.exe --no-renaming-list main,ss,cn shader.frag -o shader.h
-	sed -i 's/\x0D$$//' shader.h
-	sed -i 's/"$$/\\n"/' shader.h
 
-$(PROJNAME).o : $(PROJNAME).c shader.h Makefile
+label.h : label.svg
+	svgo $<
+	xxd -i $< > $@
+	sed -i 's/unsigned char/const unsigned char/' $@
+
+$(PROJNAME).o : $(PROJNAME).c shader.h label.h Makefile
 	gcc -c -o $@ $< $(CFLAGS)
 
 $(PROJNAME).elf.smol : $(PROJNAME).o

@@ -108,7 +108,7 @@ float gated_sphere(vec3 p, float scale, bool gate) {
     return length(p)-scale/4.;
 }
 
-#define FK(k) floatBitsToInt(k)^floatBitsToInt(cos(k))
+#define FK(k) floatBitsToInt(k)^floatBitsToInt(k*k/7.)
 float hash(float a, float b) {
     int x = FK(a); int y = FK(b);
     return float((x*x-y)*(y*y+x)+x)/2.14e9;

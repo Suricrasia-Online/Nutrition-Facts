@@ -1,3 +1,4 @@
+uniform sampler2D tex;
 out vec4 fragCol;
 
 vec3 erot(vec3 p, vec3 ax, float ro) {
@@ -207,15 +208,13 @@ vec3 pixel_color( vec2 uv, float hs )
             hs = hash(hs, 9.3);
             n = norm(p)*k;
             float fres = abs(dot(n,cam))*.98;
-            if (k < 0.) fres = step(.6, fres); //this is supposed to be total internal reflection lmao
+            if (k < 0.) fres = step(.5, fres); //this is supposed to be total internal reflection lmao
             if (hs*.5+.5 > fres || !iscola) {
                 cam = reflect(cam,n);
                 if (length(cam)==0.)cam=n;
                 if (!iscola) {
-                    if (abs(cancoords.z) < .71 && length(cancoords.xy) > .31) {
+                    if (abs(cancoords.z) < .72 && length(cancoords.xy) > .31) {
                         label = true;
-                        //break;
-                        //cam = rnd + n*max(0.,dot(n,rnd))*2.;
                     } else {
                         vec3 rnd = normalize(tan(vec3(hash(hs, 2.4),hash(hs, 7.2),hash(hs, 6.3))));
                         cam += rnd*fres*.3*(sin(p.z*500.+p.y*200.)*.3+1.)*(sin(p.z*500.-p.y*200.)*.4+1.);
@@ -243,10 +242,10 @@ vec3 pixel_color( vec2 uv, float hs )
     col += cola*vec3(1.,.5,.4)*1.2;
     if (label) {
         //diffuse material takes too long to converge, so it's time 2 cheat :3
-        vec2 texcoords = vec2(atan(cancoords.x,cancoords.y)/3.1415, cancoords.z*.74+.5);
-        vec3 tone = vec3(.75);//*pow(texture(iChannel1, texcoords).xyz,vec3(2.))+.1;
+        vec2 texcoords = vec2(atan(cancoords.y,cancoords.x)/3.1415-.15, cancoords.z*.7+.5);
         float diff = length(sin(n*3.)*.5+.5)/sqrt(3.);
-        col = smoothstep(.1,.4,col) + vec3(diff*tone)*(hs*.5+.9);
+        vec4 tone = pow(texture(tex, -texcoords),vec4(2.));
+        col += diff*tone.xyz*(hs*.5+.9);
     }
     return col;
 }
