@@ -28,8 +28,8 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 #define LABEL_HEIGHT 1000
 #define CHAR_BUFF_SIZE 256
 
-#define DEBUG_FRAG
-#define DEBUG_VERT
+// #define DEBUG_FRAG
+// #define DEBUG_VERT
 #define CHAR_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
@@ -73,8 +73,8 @@ static inline void compile_shader()
 	glUseProgramStages(p, GL_FRAGMENT_SHADER_BIT, f);
 	glBindProgramPipeline(p);
 
-	char charbuf[CHAR_BUFFER_SIZE];
 #if defined(DEBUG_FRAG) || defined(DEBUG_VERT)
+	char charbuf[CHAR_BUFFER_SIZE];
 	if ((p = glGetError()) != GL_NO_ERROR) { //use p to hold the error, lmao
 #ifdef DEBUG_FRAG
 		glGetProgramInfoLog(f, CHAR_BUFFER_SIZE, NULL, charbuf);
@@ -99,9 +99,9 @@ static inline void compile_shader()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	char* canColor = getenv("CAN_COLOR");
-	if (canColor == NULL) canColor = "e82828";
-	memcpy(label_svg+102, canColor, 6);
+	// char* canColor = getenv("CAN_COLOR");
+	// if (canColor == NULL) canColor = "e82828";
+	// memcpy(label_svg+102, canColor, 6);
   cairo_surface_t* cairoSurf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, LABEL_WIDTH, LABEL_HEIGHT);
   cairo_t* cairoCtx = cairo_create(cairoSurf);
 	RsvgHandle *handle = rsvg_handle_new_from_data(label_svg, label_svg_len, NULL);

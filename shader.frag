@@ -237,7 +237,7 @@ vec3 pixel_color( vec2 uv, float hs )
     //environ += cola*1000.;
     environ *= mix(vec3(1), vec3(1.,0.5,0.4), smoothstep(0.,.4,cola+.1));
     vec3 col = (bounce&&escape) ? environ : vec3(0.0);
-    col += cola*vec3(1.,0.5,0.4)*1.5;
+    col += cola*vec3(1.,0.5,0.4)*2.;
     if (label) {
         //diffuse material takes too long to converge, so it's time 2 cheat :3
         vec2 texcoords = vec2(atan(cancoords.y,cancoords.x)/3.1415-.15, cancoords.z*.7+.5);
