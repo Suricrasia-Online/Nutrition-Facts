@@ -262,6 +262,6 @@ void main() {
 
 	fragCol /= fragCol.w; //"film grain"
 	fragCol *= 1.0 - dot(uv,uv)*0.5; //vingetting lol
-	fragCol = smoothstep(0.08,1.0,sqrt(fragCol))+.03; //colour grading
+	fragCol = smoothstep(0.09,0.99,sqrt(fragCol))+.02; //colour grading
 	fragCol += hash(uv.x,uv.y)*.015;
 }
