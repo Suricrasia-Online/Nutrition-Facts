@@ -1,0 +1,261 @@
+//CC0 1.0 Universal https://creativecommons.org/publicdomain/zero/1.0/
+//To the extent possible under law, Blackle Mori has waived all copyright and related or neighboring rights to this work.
+
+vec3 erot(vec3 p, vec3 ax, float ro) {
+    return mix(dot(ax,p)*ax,p,cos(ro))+sin(ro)*cross(ax,p);
+}
+
+float smin(float a, float b, float k) {
+    float h = max(0., k-abs(b-a))/k;
+    return min(a,b) - h*h*h*k/6.;
+}
+
+float super(vec2 p) {
+  return sqrt(length(p*p));
+}
+
+float super(vec3 p) {
+  return sqrt(length(p*p));
+}
+
+float linedist(vec2 p, vec2 a, vec2 b) {
+  float k = dot(p-a,b-a)/dot(b-a,b-a);
+  return distance(p,mix(a,b,clamp(k,0.,1.)));
+}
+
+vec2 kink(vec2 p, vec2 c, float k) {
+    p -= c;
+    float ang = atan(p.x, p.y);
+    float len = length(p);
+    ang -= ang/sqrt(1.+ang*ang)*(1.-k);
+    return vec2(sin(ang),cos(ang))*len + c;
+}
+
+float corner(vec2 p) {
+  return super(max(p,0.)) + min(0.,max(p.x,p.y));
+}
+
+//welcome to the 4 dimensional corner function how may I take your order?
+float corner(vec4 p) {
+    return length(max(p,0.))+min(0.,max(max(p.x,p.y),max(p.z,p.w)));
+}
+
+float cylinder(vec3 p, vec2 d) {
+  return corner(vec2(length(p.xy), abs(p.z)) - d);
+}
+
+float chamfer(vec2 p, float st, float r, float f) {
+  return smin(-corner(-p), dot(p,normalize(vec2(st,1)))-r, r*f);
+}
+
+float cantab(vec3 p){
+    vec2 off=vec2(0,cos(p.r)/4.);
+    p=erot(p,vec3(1,0,0),-.1)-vec3(0,0,.4);
+    if(abs(p.r)<3.4&&p.g<0.&&p.g>-7.)p.b+=smoothstep(0.,5.,p.g+7.)*.5;
+    float connector=corner(vec2(p.b+.1+.2,corner(abs(p.rg-vec2(0,-6))-vec2(3,4)+.2+2.)-2.))-.2;
+    float tabprofile=linedist(p.rg+off,vec2(0,4.25),vec2(0,-4.25))-6.55;
+    float tab=corner(vec2(tabprofile,abs(p.b)))-.5;
+    float indent=-chamfer(vec2(tabprofile+4.,.5-p.b),.6,1.5,.5);
+    float bridge=corner(vec2(p.b+.1+.8,linedist(p.rg,vec2(-10.,2.),vec2(10.,2.))-.05))-.8;
+    indent=smin(min(bridge,connector),indent,1.3);
+    return-smin(-indent,-tab,.5);
+}
+#define CANSCALE 80.;
+
+vec3 gcancoords;
+float thecan(vec3 p){
+    gcancoords = p;
+    p*=CANSCALE;
+    float outer1=cylinder(p,vec2(24.345,58.925))-2.;
+    float outer2=cylinder(p-vec3(0,0,3.105),vec2(23.2,64.83))-2.;
+    float rim=cylinder(p-vec3(0,0,69.63),vec2(23.88,-.75))-2.;
+    float subinner=cylinder(p-vec3(0,0,69.63),vec2(22.25,3.))-2.;
+    float addinner=cylinder(p-vec3(0,0,64.63),vec2(20.56,.5))-2.;
+    float knob=cylinder(p-vec3(0,0,67.23),vec2(1.65,.55))-.25;
+    vec3 p2=vec3(sqrt(p.r*p.r+4.),p.gb);
+    float bumps=length(p2-vec3(4.,10.,66.13))-1.1;
+    float hole=-smin(-length(p.rg-vec2(0,-9))+8.,-length(p.rg-vec2(0,-15))+11.5,3.);
+    p2.g+=20.5;
+    p2.gr=kink(p2.gr,vec2(10,0),.1);
+    float ridge=length(vec2(p.b-66.73,linedist(p2.rg,vec2(2,-2),vec2(12,14))))-.5;
+    float fuckery=super(p-vec3(5,-6.5,66.73))-2.;
+    float inside=cylinder(p-vec3(0,0,14.63),vec2(20.56,52.));
+    float tab=10000.;
+    if(p.b>60.)tab=cantab(erot(p,vec3(0,0,1),.2)-vec3(0.,5.5,68.13));
+    p-=vec3(5,-4.,66.23);
+    p=erot(p,normalize(vec3(1.5,-.5,.4)),-1.);
+    p+=vec3(5.,-4.5,66.73);
+    float hole2=-smin(-length(p.rg-vec2(0,-9))+8.,-length(p.rg-vec2(0,-15))+11.5,3.);
+    float lip=corner(vec2(abs(p.b-66.73),hole2))-.2;
+    float main=chamfer(vec2(outer1,outer2),.4,1.4,.9);
+    main=smin(-smin(-min(main,rim),subinner,1.),addinner,2.);
+    main=-smin(hole,-smin(min(main,knob),bumps,1.2),.5);
+    main=-smin(-smin(main,ridge,1.),fuckery,3.);
+    main=max(main,-inside);
+    main=min(tab,smin(main,lip,2.));
+    return main/CANSCALE;
+}
+
+
+float gated_sphere(vec3 p, float scale, bool gate) {
+    if (!gate) {
+        p = abs(p);
+        if(p.x < p.y) p.xy = p.yx;
+        if(p.y < p.z) p.yz = p.zy;
+        if(p.x < p.y) p.xy = p.yx;
+        p.x -= scale;
+    }
+    return length(p)-scale/4.;
+}
+
+#define FK(k) floatBitsToInt(k)^floatBitsToInt(cos(k))
+float hash(float a, float b) {
+    int x = FK(a); int y = FK(b);
+    return float((x*x-y)*(y*y+x)+x)/2.14e9;
+}
+
+//help... me... the SDF functions... are taking over... AAUAHGGUGHG
+float bubbleify(vec3 p, float sdf) {
+    float bubbles = 1e9;
+    float scale = .07;
+    for (int i = 0; i < 3; i++) { //loops in an sdf function.. please forgive me!!!
+        p = erot(p, normalize(vec3(i,2,5)), .7)+.2;
+        scale *= .8;
+
+        //ripe for minify
+      vec3 id = floor(p/scale);
+      vec3 p2 = (fract(p/scale)-0.5)*scale;
+
+      bool gated = hash(id.x, hash(id.y, id.z)) > .8;
+        float holes = gated_sphere(p2, scale, gated);
+        bubbles = min(bubbles, holes);
+        
+    }
+    
+    return max(smin(-bubbles, -sdf-.004, .01), sdf);
+}
+
+float fractal(vec2 p, float k) {
+    vec2 cut = normalize(vec2(k,1.));
+    float scale = 1.;
+    for (int i = 0; i < 4; i++) {
+        p.x = sqrt(p.x*p.x+.05)-sqrt(.05);
+        p.y = sqrt(p.y*p.y+.05)-sqrt(.05);
+        p.x -= 1.;
+        p += smin(0.,-dot(p,cut),.5)*2.*cut;
+        p *= 2.;
+        scale *= 2.;
+    }
+    return linedist(p,vec2(1,0), vec2(-2,0))/scale;   
+}
+
+float splat;
+float scene(vec3 p) {
+    vec3 myp = p;
+    
+    vec2 mouse = (iMouse.xy-iResolution.xy*.5)/iResolution.y;
+    myp -= vec3(-0.2,-1.5-.4,-1.4+.15);
+    myp = erot(myp, vec3(0,1,0), -.1-.15);//todo; roll into one
+    myp = erot(myp, vec3(1,0,0), .7+.25);
+    myp = erot(myp, vec3(0,0,1), 1.7);
+    float can = thecan(myp);
+    p.x += cos(p.z*4.)/25.*cos(p.y*5.);
+    //p.y += 1.;
+    float fr1 = fractal(p.yz, 1.8);
+    vec3 p2 = erot(p,normalize(vec3(1)),.4);
+    float fr2 = fractal(p2.yz, 2.4);
+    //this is like, a 4 dimensional.. intersection(?) of two versions of a KIFS fractal
+    splat = corner(vec4(fr1-.035, fr2-.035, abs(p.x), p2.x)/sqrt(2.))-.015+ cos(fr1*100.)*.001+ cos(fr2*200.)*.001;
+    splat = bubbleify(p, splat);
+    //return can;
+    //return splat;
+    return min(splat, can);
+}
+
+vec3 norm(vec3 p) {
+    mat3 k = mat3(p,p,p)-mat3(0.0001);
+    return normalize(scene(p)-vec3(scene(k[0]),scene(k[1]),scene(k[2])));
+}
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    fragColor = texelFetch(iChannel0, ivec2(fragCoord), 0);
+    vec2 uv = (fragCoord-iResolution.xy*.5)/iResolution.y;
+    float hs = hash(float(iFrame), hash(uv.x,uv.y));
+    uv += tan(vec2(hash(hs, 7.2), hash(hs, 8.6)))/iResolution.y;//*.5;//todo: remove .5 for a more cinematic look
+    vec3 cam = normalize(vec3(1.9,uv));
+    vec3 init = vec3(-4,-.6,-.6);
+    
+    float zrot = 4.;
+    float yrot = .0;//;
+    cam = erot(cam, vec3(1,0,0), -.6);
+    cam = erot(cam, vec3(0,1,0), yrot);
+    init = erot(init, vec3(0,1,0), yrot);
+    cam = erot(cam, vec3(0,0,1), zrot);
+    init = erot(init, vec3(0,0,1), zrot);
+    
+    vec3 p = init;
+    bool bounce = false;
+    float k = 1.;
+    float cola = 0.;
+    bool recalcK = false;
+    bool escape = false;
+    bool label = false;
+    vec3 cancoords;
+    vec3 n;
+    for (int i = 0; i < 150; i++) {
+        float dist = scene(p);
+        if (recalcK) { k = dist < 0. ? -1. : 1.; recalcK = false; }
+        p += cam*dist*k*1.1;
+        if (dist < 0.) cola += abs(dist);
+        if (dist*dist < 1e-9) {
+            cancoords = gcancoords; //this is a nightmare of my own creation
+            bool iscola = dist == splat;
+            if (iscola) escape=true;
+            hs = hash(hs, 9.3);
+            n = norm(p)*k;
+            float fres = abs(dot(n,cam))*.98;
+            if (k < 0.) fres = step(.6, fres); //this is supposed to be total internal reflection lmao
+            if (hs*.5+.5 > fres || !iscola) {
+                cam = reflect(cam,n);
+                if (length(cam)==0.)cam=n;
+                if (!iscola) {
+                    if (abs(cancoords.z) < .71 && length(cancoords.xy) > .31) {
+                        label = true;
+                        //break;
+                        //cam = rnd + n*max(0.,dot(n,rnd))*2.;
+                    } else {
+                        vec3 rnd = normalize(tan(vec3(hash(hs, 2.4),hash(hs, 7.2),hash(hs, 6.3))));
+                        cam += rnd*fres*.3*(sin(p.z*500.+p.y*200.)*.3+1.)*(sin(p.z*500.-p.y*200.)*.4+1.);
+                    }
+                }
+                cam = normalize(cam);
+                bounce = true;
+                p += n*.0005;
+            } else {
+                cam = refract(cam,n, k < 0. ? 1.33 : 1./1.33);
+                p -= n*.0005;
+            }
+            recalcK = true;
+            //break;
+        }
+        if (distance(p, init) > 10.) { escape=true; break; }
+    }
+    
+    float fact = length(sin(cam*4.)*.5+.5);
+    vec3 environ = vec3(smoothstep(1.,2.5,fact)+smoothstep(1.45,1.6,fact)*5.) + fact/8.;
+    //environ = 1.;
+    //environ += cola*1000.;
+    environ *= mix(vec3(1), vec3(1.,.6,.5), smoothstep(0.,1.,cola+.3));
+    vec3 col = (bounce&&escape) ? environ : vec3(0.0);
+    col += cola*vec3(1.,.6,.5)*1.2;
+    if (label) {
+        //diffuse material takes too long to converge, so it's time 2 cheat :3
+        vec2 texcoords = vec2(atan(cancoords.x,cancoords.y)/3.1415, cancoords.z*.74+.5);
+        vec3 tone = .75*pow(texture(iChannel1, texcoords).xyz,vec3(2.))+.1;
+        float diff = length(sin(n*3.)*.5+.5)/sqrt(3.);
+        col += vec3(diff*tone)*(hs*.5+.9);
+    }
+    //fragColor *= 0.8;
+    fragColor += vec4(col, 1);
+}
