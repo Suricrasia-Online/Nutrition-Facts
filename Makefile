@@ -21,6 +21,8 @@
 # 3.24.5-1
 # ~$ dpkg-query --showformat='${Version}' --show mesa-common-dev:amd64
 # 18.3.6-2+deb10u1
+# ~$ dpkg-query --showformat='${Version}' --show librsvg2-dev
+# 2.44.10-2.1
 
 PROJNAME := nutrition_facts
 
@@ -72,10 +74,7 @@ $(PROJNAME).o : $(PROJNAME).c shader.h label.h Makefile
 	gcc -c -o $@ $< $(CFLAGS)
 
 $(PROJNAME).elf.smol : $(PROJNAME).o
-	python3 ./smol/smold.py --smolrt "$(PWD)/smol/rt" --smolld "$(PWD)/smol/ld" --det -fuse-interp -fno-align-stack --crc32c --debugout $(PROJNAME).elf.smol.dbg --ldflags=-Wl,-Map=$(PROJNAME).elf.smol.map $(LDFLAGS) $< $@
-	#ugh idk why this happens
-	sed -i 's/libglib-2.0.so.0.5800.3/libglib-2.0.so\x00\x00\x00\x00\x00\x00\x00\x00\x00/' $@
-	sed -i 's/libcairo.so.2.11600.0/libcairo.so\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00/' $@
+	python3 ./smol/smold.py --smolrt "$(PWD)/smol/rt" --smolld "$(PWD)/smol/ld" --det -fuse-interp -fskip-zero-value --crc32c --debugout $(PROJNAME).elf.smol.dbg --ldflags=-Wl,-Map=$(PROJNAME).elf.smol.map $(LDFLAGS) $< $@
 
 $(PROJNAME)_unpacked : $(PROJNAME).c shader.h Makefile
 	gcc -o $@ $< $(CFLAGS) $(LDFLAGS)
