@@ -120,20 +120,20 @@ float hash(float a, float b) {
 //help... me... the SDF functions... are taking over... AAUAHGGUGHG
 float bubbleify(vec3 p, float sdf) {
     float bubbles = 1e9;
-    float scale = .07;
+    float scale = .06;
     for (int i = 0; i < 3; i++) { //loops in an sdf function.. please forgive me!!!
         p = erot(p, normalize(vec3(i,2,5)), .7)+.2;
         scale *= .8;
 
         //ripe for minify
         vec3 id = round(p/scale)*scale;
-        bool gated = hash(id.x, hash(id.y, id.z)) > .6;
+        bool gated = hash(id.x, hash(id.y, id.z)) > .65;
         float holes = gated_sphere(p-id, scale, gated);
         bubbles = min(bubbles, holes);
         
     }
     
-    return max(smin(-bubbles, -sdf-.003, .01), sdf);
+    return max(smin(-bubbles, -sdf-.002, .005), sdf);
 }
 
 float fractal(vec2 p, float k) {
