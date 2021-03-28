@@ -69,7 +69,8 @@ float stex(vec3 p) {
 vec3 gcancoords;
 float thecan(vec3 p){
     gcancoords = p;
-    p.z += stex(p*vec3(7,.2,.1))*.0001*smoothstep(.78,.8,p.z);
+    if (length(p)> 1.1) return length(p)-1.; //proxy
+    p.z += stex(p*vec3(6,.2,.1))*.0001*smoothstep(.78,.8,p.z);
     p*=80.;
     
     float outer1=cylinder(p,vec2(24.345,58.925))-2.;
@@ -96,7 +97,8 @@ float thecan(vec3 p){
     main=-smin(-smin(main,ridge,1.),fuckery,3.);
     main=max(main,-inside);
     
-    if(p.b>60.)main=min(main,cantab(erot(gcancoords*80.,vec3(0,0,1),.2)-vec3(0.,5.5,68.13)));
+    if(p.b>60.)
+    	main=min(main,cantab(erot(gcancoords*80.,vec3(0,0,1),.2)-vec3(0.,5.5,68.13)));
     return main/80.;
 }
 
@@ -122,7 +124,7 @@ float bubbleify(vec3 p, float sdf) {
     float bubbles = 1e9;
     float scale = .06;
     for (int i = 0; i < 3; i++) { //loops in an sdf function.. please forgive me!!!
-        p = erot(p, normalize(vec3(i,2,5)), .7)+.2;
+        p = erot(p, normalize(vec3(i,2,4)), .7)+.2;
         scale *= .8;
 
         //ripe for minify
@@ -195,10 +197,10 @@ vec3 pixel_color( vec2 uv, float hs )
     bool label = false;
     vec3 cancoords;
     vec3 n;
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < 150; i++) {
         float dist = scene(p);
         if (recalcK) { k = dist < 0. ? -1. : 1.; recalcK = false; }
-        p += cam*dist*k*1.1;
+        p += cam*dist*k;
         if (dist < 0.) cola += abs(dist);
         if (dist*dist < 1e-9) {
             cancoords = gcancoords; //this is a nightmare of my own creation
@@ -207,7 +209,6 @@ vec3 pixel_color( vec2 uv, float hs )
             hs = hash(hs, 9.3);
             n = norm(p)*k;
             float fres = abs(dot(n,cam))*.98;
-            if (k < 0.) fres = step(.5, fres); //this is supposed to be total internal reflection lmao
             if (hs*.5+.5 > fres || !iscola) {
                 cam = reflect(cam,n);
                 if (length(cam)==0.)cam=n;
@@ -218,11 +219,11 @@ vec3 pixel_color( vec2 uv, float hs )
                 }
                 cam = normalize(cam);
                 bounce = true;
-                p += n*.0005;
+                // p += n*.0005;
             } else {
                 cam = refract(cam,n, k < 0. ? 1.33 : 1./1.33);
-                p -= n*.0005;
             }
+            p += n*.0005*sign(dot(cam,n));
             recalcK = true;
             //break;
         }
@@ -242,7 +243,7 @@ vec3 pixel_color( vec2 uv, float hs )
         vec2 texcoords = vec2(atan(cancoords.y,cancoords.x)/3.1415-.15, cancoords.z*.7+.5);
         float diff = length(sin(n*3.)*.5+.5)/sqrt(3.);
         vec4 tone = pow(texture(tex, -texcoords),vec4(2.));
-        col += diff*tone.xyz*(hs*.5+.9);
+        col += diff*tone.xyz*.8;
     }
     return col;
 }
@@ -251,7 +252,7 @@ void main() {
 	fragCol = vec4(0);
 	if (gl_FragCoord.x>1920||gl_FragCoord.y>1080) { discard; return; }
 	vec2 uv = (gl_FragCoord.xy-vec2(960,540))/1080;
-	float sd = hash(uv.x,uv.y);
+	float sd = acos(-1);
 	for (int i = 0; i < SAMPLES; i++) {
 		sd = hash(sd, 2.6);
 		vec2 h2 = tan(vec2(hash(sd, 6.7), hash(sd, 3.6)));
@@ -259,7 +260,8 @@ void main() {
 		fragCol += vec4(pixel_color(uv2, sd), 1);
 	}
 
-	fragCol/=fragCol.w;
+	fragCol /= fragCol.w; //"film grain"
 	fragCol *= 1.0 - dot(uv,uv)*0.5; //vingetting lol
-	fragCol = smoothstep(0.05,1.1,sqrt(fragCol)); //colour grading
+	fragCol = smoothstep(0.05,1.05,sqrt(fragCol)); //colour grading
+	fragCol += hash(uv.x,uv.y)*.015;
 }

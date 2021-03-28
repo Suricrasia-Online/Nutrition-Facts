@@ -64,15 +64,18 @@ shader.h : shader.frag Makefile
 	mono ./shader_minifier.exe --no-renaming-list main,ss,cn shader.frag -o shader.h
 
 label.h : label.svg
-	svgo $<
+# 	svgo $<
 	xxd -i $< > $@
-	sed -i 's/unsigned char/const unsigned char/' $@
+# 	sed -i 's/unsigned char/const unsigned char/' $@
 
 $(PROJNAME).o : $(PROJNAME).c shader.h label.h Makefile
 	gcc -c -o $@ $< $(CFLAGS)
 
 $(PROJNAME).elf.smol : $(PROJNAME).o
 	python3 ./smol/smold.py --smolrt "$(PWD)/smol/rt" --smolld "$(PWD)/smol/ld" --det -fuse-interp -fno-align-stack --crc32c --debugout $(PROJNAME).elf.smol.dbg --ldflags=-Wl,-Map=$(PROJNAME).elf.smol.map $(LDFLAGS) $< $@
+	#ugh idk why this happens
+	sed -i 's/libglib-2.0.so.0.5800.3/libglib-2.0.so\x00\x00\x00\x00\x00\x00\x00\x00\x00/' $@
+	sed -i 's/libcairo.so.2.11600.0/libcairo.so\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00/' $@
 
 $(PROJNAME)_unpacked : $(PROJNAME).c shader.h Makefile
 	gcc -o $@ $< $(CFLAGS) $(LDFLAGS)

@@ -30,7 +30,7 @@ const char* vshader = "#version 420\nout gl_PerVertex{vec4 gl_Position;};void ma
 
 #define DEBUG_FRAG
 #define DEBUG_VERT
-#define DEBUG_BUFFER_SIZE 4096
+#define CHAR_BUFFER_SIZE 4096
 #define TIME_RENDER
 #define EXIT_DURING_RENDER
 #define EXIT_USING_ESC_KEY
@@ -60,7 +60,7 @@ __attribute__((always_inline))
 static inline void compile_shader()
 {
 	char* samples = getenv("SAMPLES");
-	if (samples == NULL) samples = "100";
+	if (samples == NULL) samples = "300";
 
 	const char* shader_frag_list[] = {"#version 420\n#define SAMPLES ", samples, "\n", shader_frag};
 	GLuint f = glCreateShaderProgramv(GL_FRAGMENT_SHADER, 4, shader_frag_list);
@@ -73,16 +73,16 @@ static inline void compile_shader()
 	glUseProgramStages(p, GL_FRAGMENT_SHADER_BIT, f);
 	glBindProgramPipeline(p);
 
+	char charbuf[CHAR_BUFFER_SIZE];
 #if defined(DEBUG_FRAG) || defined(DEBUG_VERT)
-	char error[DEBUG_BUFFER_SIZE];
 	if ((p = glGetError()) != GL_NO_ERROR) { //use p to hold the error, lmao
 #ifdef DEBUG_FRAG
-		glGetProgramInfoLog(f, DEBUG_BUFFER_SIZE, NULL, error);
-		printf(error);
+		glGetProgramInfoLog(f, CHAR_BUFFER_SIZE, NULL, charbuf);
+		printf(charbuf);
 #endif
 #ifdef DEBUG_VERT
-		glGetProgramInfoLog(v, DEBUG_BUFFER_SIZE, NULL, error);
-		printf(error);
+		glGetProgramInfoLog(v, CHAR_BUFFER_SIZE, NULL, charbuf);
+		printf(charbuf);
 #endif
 		SYS_exit_group(p);
 		__builtin_unreachable();
@@ -99,6 +99,9 @@ static inline void compile_shader()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+	char* canColor = getenv("CAN_COLOR");
+	if (canColor == NULL) canColor = "e82828";
+	memcpy(label_svg+102, canColor, 6);
   cairo_surface_t* cairoSurf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, LABEL_WIDTH, LABEL_HEIGHT);
   cairo_t* cairoCtx = cairo_create(cairoSurf);
 	RsvgHandle *handle = rsvg_handle_new_from_data(label_svg, label_svg_len, NULL);
@@ -131,6 +134,9 @@ on_render (GtkGLArea *glarea, GdkGLContext *context)
   }
 
 #ifdef TIME_RENDER
+#ifndef EXIT_DURING_RENDER
+	glFinish();
+#endif
   printf("render time: %f\n", g_timer_elapsed(gtimer, NULL));
 #endif
   return TRUE;
