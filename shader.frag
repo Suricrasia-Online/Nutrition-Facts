@@ -20,7 +20,7 @@ float ss(vec3 p) {
 
 float linedist(vec2 p, vec2 a, vec2 b) {
   float k = dot(p-a,b-a)/dot(b-a,b-a);
-  return distance(p,mix(a,b,clamp(k,0.,1.)));
+  return length(p-mix(a,b,clamp(k,0.,1.)));
 }
 
 vec2 kink(vec2 p, vec2 c, float k) {
@@ -227,7 +227,7 @@ vec3 pixel_color( vec2 uv, float hs )
             recalcK = true;
             //break;
         }
-        if (distance(p, init) > 10.) { escape=true; break; }
+        if (length(p-init) > 10.) { escape=true; break; }
     }
     
     
