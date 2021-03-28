@@ -127,13 +127,13 @@ float bubbleify(vec3 p, float sdf) {
 
         //ripe for minify
         vec3 id = round(p/scale)*scale;
-        bool gated = hash(id.x, hash(id.y, id.z)) > .7;
+        bool gated = hash(id.x, hash(id.y, id.z)) > .6;
         float holes = gated_sphere(p-id, scale, gated);
         bubbles = min(bubbles, holes);
         
     }
     
-    return max(smin(-bubbles, -sdf-.004, .01), sdf);
+    return max(smin(-bubbles, -sdf-.003, .01), sdf);
 }
 
 float fractal(vec2 p, float k) {
@@ -161,7 +161,7 @@ float scene(vec3 p) {
     vec3 p2 = erot(p,normalize(vec3(1)),.4);
     float fr2 = fractal(p2.yz, 2.4);
     //this is like, a 4 dimensional.. intersection(?) of two versions of a KIFS fractal
-    splat = cn(vec4(fr1-.035, fr2-.035, abs(p.x), p2.x)/sqrt(2.))-.015+ cos(fr1*100.)*.001+ cos(fr2*200.)*.001;
+    splat = cn(vec4(fr1-.045, fr2-.045, abs(p.x), p2.x)/sqrt(2.))-.008+ cos(fr1*100.)*.001+ cos(fr2*200.)*.001;
     if (splat < 0.) splat = bubbleify(p, splat);
     //return can;
     //return splat;
@@ -234,9 +234,9 @@ vec3 pixel_color( vec2 uv, float hs )
     vec3 environ = vec3(smoothstep(1.,2.5,fact)+smoothstep(1.45,1.6,fact)*8.) + fact/8.;
     //environ = 1.;
     //environ += cola*1000.;
-    environ *= mix(vec3(1), vec3(1.3,0.6,0.5), smoothstep(0.,.5,cola+.1));
+    environ *= mix(vec3(1), vec3(1.,0.5,0.4), smoothstep(0.,.4,cola+.1));
     vec3 col = (bounce&&escape) ? environ : vec3(0.0);
-    col += cola*vec3(1.3,0.6,0.5);
+    col += cola*vec3(1.,0.5,0.4)*2.5;
     if (label) {
         //diffuse material takes too long to converge, so it's time 2 cheat :3
         vec2 texcoords = vec2(atan(cancoords.y,cancoords.x)/3.1415-.15, cancoords.z*.7+.5);
