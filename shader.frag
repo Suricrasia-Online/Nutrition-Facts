@@ -80,7 +80,7 @@ float thecan(vec3 p){
     float addinner=cylinder(p-vec3(0,0,64.63),vec2(20.56,.5))-2.;
     float knob=cylinder(p-vec3(0,0,67.23),vec2(1.65,.55))-.25;
     vec3 p2=vec3(sqrt(p.r*p.r+4.),p.gb);
-    float bumps=length(p2-vec3(4.,10.,66.13))-1.1;
+    // float bumps=length(p2-vec3(4.,10.,66.13))-1.1;
     float hole=cn(vec2(-smin(-length(p.rg-vec2(0,-9))+8.,-length(p.rg-vec2(0,-15))+11.5,3.),-p.z));
     p2.g+=20.5;
     p2.gr=kink(p2.gr,vec2(10,0),.1);
@@ -93,7 +93,7 @@ float thecan(vec3 p){
     // p+=vec3(5.,-4.5,66.73);
     float main=chamfer(vec2(outer1,outer2),.4,1.4,.9);
     main=smin(-smin(-min(main,rim),subinner,1.),addinner,2.);
-    main=-smin(hole,-smin(min(main,knob),bumps,1.2),.5);
+    main=-smin(hole,-min(main,knob),.5);
     main=-smin(-smin(main,ridge,1.),fuckery,3.);
     main=max(main,-inside);
     
@@ -113,10 +113,10 @@ float gated_sphere(vec3 p, float scale, bool gate) {
     return length(p)-scale/4.;
 }
 
-#define FK(k) floatBitsToInt(k)^floatBitsToInt(k*k/7.)
 float hash(float a, float b) {
-    int x = FK(a); int y = FK(b);
-    return float((x*x-y)*(y*y+x)+x)/2.14e9;
+	int x = floatBitsToInt(a*a/7.)^floatBitsToInt(a+.1);
+	int y = floatBitsToInt(b*b/7.)^floatBitsToInt(b+.1);
+	return float((x*x+y)*(y*y-x)-x)/2.14e9;
 }
 
 //help... me... the SDF functions... are taking over... AAUAHGGUGHG
@@ -237,7 +237,7 @@ vec3 pixel_color( vec2 uv, float hs )
     //environ += cola*1000.;
     environ *= mix(vec3(1), vec3(1.,0.5,0.4), smoothstep(0.,.4,cola+.1));
     vec3 col = (bounce&&escape) ? environ : vec3(0.0);
-    col += cola*vec3(1.,0.5,0.4)*2.5;
+    col += cola*vec3(1.,0.5,0.4)*1.5;
     if (label) {
         //diffuse material takes too long to converge, so it's time 2 cheat :3
         vec2 texcoords = vec2(atan(cancoords.y,cancoords.x)/3.1415-.15, cancoords.z*.7+.5);
